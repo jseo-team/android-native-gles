@@ -2,29 +2,45 @@
 #include "android_native_app_glue.h"
 #include "shader_utils.h"
 
+
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <stdlib.h>
 
+
+#include <stdio.h>
+#include <stdarg.h>
+
+
+
+extern char *before
+(char *str, char *src);
+extern char *after
+(char *str, char *src);
 const char vertexShader[] = 
 	"attribute vec4 position;\n"
 	"varying vec3 color;\n"
 	"void main() {\n"
-	"	color = position.xyz*0.5 + vec3(0.5);\n"
+	"	color = vec3(0.9);\n"
 	"	gl_Position = position;\n"
 	"}\n";
 
 const char fragmentShader[] = 
 	"precision mediump float;\n"
+	"uniform sampler2D text;\n"
 	"varying vec3 color;\n"
 	"void main() {\n"
 	"	gl_FragColor = vec4(color, 1.0);\n"
 	"}\n";
 
 const GLfloat triangleVertices[] = {
-	 0.0f,  0.5f,
-	-0.5f, -0.5f,
-	 0.5f, -0.5f
+	 0.99f,  0.009f,
+	-0.99f, -0.009f,
+	 0.99f, -0.009f,
+	 -0.99f,  -0.009f,
+	-0.99f, 0.009f,
+	 0.99f, 0.009f
 };
 
 struct SavedState {
@@ -115,6 +131,8 @@ bool initDisplay(AppState* appState) {
 	appState->glObjects.program = program;
 	appState->glObjects.positionLocation = glGetAttribLocation(program, "position");
 
+	
+	
 	return true;
 }
 
@@ -143,26 +161,51 @@ void drawFrame(AppState* appState) {
 		x = x * 0.5f + 0.5f;
 		y = y * 0.5f + 0.5f;
 	}
+	
+	
+	GLuint textureId;
+	
+	//generate from stb lib
+	int pixelWidth=2;
+	int pixelHeight=2;
+	
+	
 
-	glClearColor(x, 1.0f - y, 0.5f, 1.0f);
+			 
+			 
+	glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	
+	
 	glUseProgram(appState->glObjects.program);
 	glVertexAttribPointer(appState->glObjects.positionLocation, 2, GL_FLOAT, GL_FALSE, 0, triangleVertices);
 	glEnableVertexAttribArray(appState->glObjects.positionLocation);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	bool drawMovingBlock = true;
-	bool drawPointer = true;
+	bool drawPointer = false;
 
 	if (drawMovingBlock) {
 		static int blockX = 0;
 		glEnable(GL_SCISSOR_TEST);
-		glScissor(blockX, 0, 8, 8);
+		glScissor(0, 0.495*appState->height, 
+		0.02*appState->width+blockX, 
+		0.02*appState->width);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_SCISSOR_TEST);
-		blockX = (blockX + 1) % appState->width;
+		
+		char *stack=( char* ) malloc(1024);
+	    sprintf(stack, "%d:%d", appState->width, appState->height);
+		char *done=czeo(stack);
+		
+		blockX = atoi(done);
+		//(blockX+1) % appState->width;
+		
+		free(done);
+		free(stack);
 	}
 
 	if (drawPointer) {
@@ -170,7 +213,7 @@ void drawFrame(AppState* appState) {
 		glScissor(x*appState->width, (1.0f - y)*appState->height, 8, 8);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		glScissor(x*appState->width + 2, (1.0f - y)*appState->height + 2, 4, 4);
+		glScissor(x*appState->width + 4, (1.0f - y)*appState->height + 2, 4, 4);
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDisable(GL_SCISSOR_TEST);
@@ -280,7 +323,7 @@ static void onAppCmd(android_app* app, int32_t cmd) {
 
 void android_main(android_app* app) {
 	LOGI("--- MAIN THREAD STARTED ---");
-
+    
 	app_dummy(); // Ensure glue code isn't stripped
 
 	AppState appState;
@@ -318,3 +361,7 @@ void android_main(android_app* app) {
 		}
 	}
 }
+
+
+
+

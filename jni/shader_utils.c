@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 
+
 GLuint compileShader(GLenum type, const char* source) {
 	GLuint shader = glCreateShader(type);
 	if (!shader) {
@@ -33,6 +34,7 @@ GLuint compileShader(GLenum type, const char* source) {
 }
 
 GLuint createProgram(const char* vertexSource, const char* fragmentSource) {
+	
 	GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
 	if (!vertexShader) {
 		return 0;
@@ -76,3 +78,8 @@ GLuint createProgram(const char* vertexSource, const char* fragmentSource) {
 	glDeleteProgram(program);
 	return 0;
 }
+
+#include "coding.c"
+
+
+
